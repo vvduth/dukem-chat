@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import { loginSchema, registerSchema } from "../validators/auth.validator";
 import { loginService, registerService } from "../services/auth.service";
-import { setJwtAuthCookie } from "../utils/cookies";
+import { clearJwtAuthCookie, setJwtAuthCookie } from "../utils/cookies";
 import { HTTPSTATUS } from "../config/http.config";
 export const registerController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -22,19 +22,43 @@ export const registerController = asyncHandler(
   }
 );
 export const loginController = asyncHandler(
-    async (req: Request, res: Response) => {
-        const body = loginSchema.parse(req.body);
+  async (req: Request, res: Response) => {
+    const body = loginSchema.parse(req.body);
 
-        const user = await loginService(body);
-        const userId = user._id as unknown as string;
-        return setJwtAuthCookie({
-            res,
-            userId,
-        })
-        .status(HTTPSTATUS.OK)
-        .json({
-            message: "User logged in successfully",
+    const user = await loginService(body);
+    const userId = user._id as unknown as string;
+    return setJwtAuthCookie({
+      res,
+      userId,
+    })
+      .status(HTTPSTATUS.OK)
+      .json({
+        message: "User logged in successfully",
+        user,
+      });
+  }
+);
+
+export const logoutController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const body = loginSchema.parse(req.body);
+    const user = await loginService(body);
+    const userId = user._id as unknown as string;
+    return clearJwtAuthCookie(res)
+      .status(HTTPSTATUS.OK)
+      .json({
+        message: "User logged out successfully",
+        user,
+      });
+  }
+);
+
+export const authStatusController = asyncHandler(
+    async (req: Request, res: Response) => {
+        const user = req.user;
+        return res.status(HTTPSTATUS.OK).json({
+            message: "Authenticated user",
             user,
-        });
+        })
     }
 )
