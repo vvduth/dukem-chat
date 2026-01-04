@@ -30,6 +30,7 @@ const userSchema = new Schema<UserDocument>(
   },
   {
     timestamps: true,
+    // Ensure password is not returned in JSON responses
     toJSON: {
       transform: (doc, ret) => {
         if (ret) {
