@@ -9,6 +9,7 @@ import { HTTPSTATUS } from "./config/http.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import connectDatabase from "./config/database.config";
 import "./config/passport.config";
+import router from "./routes";
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use(passport.initialize());
 app.get("/health", asyncHandler(async (req: Request, res: Response) => {
     res.status(HTTPSTATUS.OK).json({ status: "OK" });
 }));
+app.use("/api", router)
+
 app.use(errorHandler)
 app.listen(Env.PORT, async () => {
     await connectDatabase();
