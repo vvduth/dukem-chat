@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import { HTTPSTATUS } from "../config/http.config";
-import { createChatSchema } from "../validators/chat.validator";
-import { createChatService, getUserChatsService } from "../services/chat.service";
+import { chatIdSchema, createChatSchema } from "../validators/chat.validator";
+import { createChatService, getSingleChatService, getUserChatsService } from "../services/chat.service";
 
 export const createChatController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -29,5 +29,22 @@ export const getUserChatsController = asyncHandler(
       messages: "User chats fetched successfully",
       chats,
     });
+  }
+)
+
+export const getSignleChatController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const { id } = chatIdSchema.parse(req.params);
+
+    const {
+      chat, messages
+    } = await getSingleChatService(id, userId);
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "User Single chat fetched successfully",
+      chat,
+      messages
+    })
   }
 )

@@ -1,4 +1,5 @@
 import ChatModel from "../models/chat.model";
+import MessageModel from "../models/message.model";
 import UserModel from "../models/user.model";
 import { BadRequestException } from "../utils/app-error";
 
@@ -63,8 +64,41 @@ export const getUserChatsService = async (userId: string) => {
       populate: {
         path: "sender",
         select: "name avatar",
-      }
+      },
     })
     .sort({ updatedAt: -1 });
   return chats;
+};
+
+export const getSingleChatService = async (
+  chatId: string,
+  userId: string
+) => {
+    const chat = await ChatModel.findOne({
+        _id: chatId,
+        participants: {
+            $in: [userId],
+        }
+    })
+
+    if (!chat) {
+        throw new BadRequestException("Chat not found or you don't have access to it");
+    }
+
+    const messages = await MessageModel.find({ chatId: chatId })
+    .populate("sender", "name avatar")
+    .populate({
+        path: "replyTo",
+        select: "content image sender",
+        populate: {
+            path: "sender",
+            select: "name avatar"
+        }
+    })
+    .sort({ createdAt: -1 });
+
+    return {
+        chat,
+        messages
+    }
 };
