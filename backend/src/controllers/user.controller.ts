@@ -10,5 +10,6 @@ export const getUsersController = asyncHandler(async (req: Request, res: Respons
 
   return res.status(HTTPSTATUS.OK).json({
     message: "Users retrieved successfully",
+    user,
   })
 })
