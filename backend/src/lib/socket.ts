@@ -111,3 +111,50 @@ export const initializeSocket = (server: HttpServer) => {
     })
   });
 };
+
+function getIOInstance(): SocketIOServer {
+    if (!io) {
+        throw new Error("Socket.IO not initialized");
+    }
+    return io;
+}
+
+
+export const emitNewChatToParticipants = (
+  participantIds: string[] =[],
+  chat: any
+) => {
+    const io = getIOInstance();
+    for (const participantId of participantIds) {
+        // emit to each participant's personal room
+        io.to(`user:${participantId}`).emit("chat:new", chat);
+    }
+}
+
+export const emitNewMessageToChatRoom = (
+    userId: string,
+    chatId: string,
+    newMessage: any
+) => {
+    const io = getIOInstance();
+    const senderSocketId = onlineUsers.get(userId);
+
+    if (senderSocketId) {
+        io.to(`chat:${chatId}`).except(senderSocketId).emit("message:new", newMessage);
+    } else {
+        io.to(`chat:${chatId}`).emit("message:new", newMessage);
+    }
+}
+
+export const emitLastMessageToChatParticipants = (
+    participantIds: string[] = [],
+    chatId: string, 
+    lastMessage: any
+) => {
+    const io = getIOInstance();
+    const payload = {chatId, lastMessage};
+
+    for (const participantId of participantIds) {
+        io.to(`user:${participantId}`).emit("chat:update", payload);
+    }
+}

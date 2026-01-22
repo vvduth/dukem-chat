@@ -1,3 +1,4 @@
+import { emitNewChatToParticipants } from "../lib/socket";
 import ChatModel from "../models/chat.model";
 import MessageModel from "../models/message.model";
 import UserModel from "../models/user.model";
@@ -48,7 +49,13 @@ export const createChatService = async (
     });
   }
 
-  // Implement websocket
+  // Implement websocket aka update chat list, nofiy users, etc here if needed
+  const populateChat = await chat?.populate("participants", "name avatar");
+  const participantIdStrings = populateChat?.participants.map((p) => {
+    return p._id?.toString();
+  } )
+
+  emitNewChatToParticipants(participantIdStrings, populateChat);
   return chat;
 };
 

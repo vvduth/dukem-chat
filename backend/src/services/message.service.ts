@@ -1,8 +1,9 @@
-import { populate } from "dotenv";
 import ChatModel from "../models/chat.model";
 import MessageModel from "../models/message.model";
 import { BadRequestException, NotFoundException } from "../utils/app-error";
 import cloudinary from "../config/cloudinary.config";
+import mongoose from "mongoose";
+import { emitLastMessageToChatParticipants, emitNewMessageToChatRoom } from "../lib/socket";
 
 export const sendMessageService = async (
   userId: string,
@@ -59,7 +60,16 @@ export const sendMessageService = async (
       },
     ]);
 
-    // web socket
+    chat.lastMessage = newMessage._id as mongoose.Types.ObjectId;
+    await chat.save(); 
+
+    // websocket emit new messages to chat room
+    emitNewMessageToChatRoom(userId, chatId, newMessage);
+
+    // web socket emit last message to members in the chat
+    const allParticipantIds = chat.participants.map((id) => id.toString());
+    emitLastMessageToChatParticipants(allParticipantIds, chatId, newMessage);
+
     return {
         userMessage: newMessage,
         chat
