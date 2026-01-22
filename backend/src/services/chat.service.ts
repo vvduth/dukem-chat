@@ -102,3 +102,18 @@ export const getSingleChatService = async (
         messages
     }
 };
+
+
+export const validateChatParticipant = async (chatId: string, userId: string) => {
+  const chat = await ChatModel.findOne({
+    _id: chatId,
+    participants: {
+      $in: [userId],
+    }
+  })
+
+  if (!chat) {
+    throw new BadRequestException("Chat not found or you don't have access to it");
+  }
+  return chat;
+} 
